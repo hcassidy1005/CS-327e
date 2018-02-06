@@ -1,11 +1,7 @@
 create table Listings (
    id int primary key,
    listing_url varchar(200),
-<<<<<<< HEAD
-   scrape_id varchar(30),
-=======
    scrape_id int,
->>>>>>> bb080f4be21bcb44371a2b7caf33f687eaebc148
    last_scraped date,
    name varchar(100),
    summary text,
@@ -23,18 +19,10 @@ create table Listings (
    picture_url varchar(5000),
    xl_picture_url varchar(5000),
    host_id int,
-<<<<<<< HEAD
-   host_url varchar(100),
-   host_name varchar(50),
-   host_since date,
-   host_location varchar(1000),
-   host_about varchar(12000),
-=======
    host_name varchar(50),
    host_since date,
    host_location varchar(50),
    host_about varchar(5000),
->>>>>>> bb080f4be21bcb44371a2b7caf33f687eaebc148
    host_response_time varchar(50),
    host_response_rate varchar(10),
    host_acceptance_rate varchar(10),
@@ -44,11 +32,7 @@ create table Listings (
    host_neighborhood varchar(50),
    host_listings_count int,
    host_total_listings_count int,
-<<<<<<< HEAD
-   host_verifications varchar(500),
-=======
    host_verifications varchar(50),
->>>>>>> bb080f4be21bcb44371a2b7caf33f687eaebc148
    host_has_profile_pic boolean,
    host_identity_verified boolean,
    street varchar(100),
@@ -57,11 +41,7 @@ create table Listings (
    neighborhood_group_cleansed int, 
    city varchar(20),
    state varchar(2),
-<<<<<<< HEAD
-   zipcode varchar(20), 
-=======
    zipcode int, 
->>>>>>> bb080f4be21bcb44371a2b7caf33f687eaebc148
    market varchar(20),
    smart_location varchar(30),
    country_code varchar(2),
@@ -72,19 +52,11 @@ create table Listings (
    property_type varchar(20),
    room_type varchar(20),
    accommodates int,
-<<<<<<< HEAD
-   bathrooms numeric(2,1),
-   bedrooms int, 
-   beds int, 
-   bed_type varchar(20),
-   amenities varchar(5000),
-=======
    bathrooms numeric(1,1),
    bedrooms int, 
    beds int, 
    bed_type varchar(20),
    amenities varchar(100),
->>>>>>> bb080f4be21bcb44371a2b7caf33f687eaebc148
    square_feet int,
    price varchar(10),
    weekly_price varchar(15),
@@ -113,17 +85,10 @@ create table Listings (
    review_scores_location int, 
    review_scores_value int, 
    requires_license boolean,
-<<<<<<< HEAD
-   license varchar(1000),
-   jurisdiction_names varchar(100),
-   instant_bookable boolean,
-   cancellation_policy varchar(100),
-=======
    license varchar(1),
    jurisdiction_names varchar(1),
    instant_bookable boolean,
    cancellation_policy varchar(10),
->>>>>>> bb080f4be21bcb44371a2b7caf33f687eaebc148
    require_guest_profile_picture boolean,
    require_guest_phone_verification boolean,
    calculated_host_listings_count int,
