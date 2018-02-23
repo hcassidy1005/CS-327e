@@ -23,3 +23,28 @@ from listing
 where price > 1000
 group by price, id
 order by price asc;
+
+#Query 4: List the listing ids and the total number of amenities they have in the database. Only include listings which have at least 10 amenities. 
+select listing_id, count(*) as number_of_amenities
+from Amenity 
+group by listing_id 
+having count(*) >= 10
+limit 20;
+
+#Query 5: List the number of reviews that each listing has sorted by the highest number of reviews to lowest. 
+select l.id as listing_id, count(l.id) as number_of_reviews 
+from review r left join listing l
+on r.listing_id = l.id 
+group by l.id 
+order by count(l.id) desc 
+limit 20; 
+
+
+#Query 6: Find how many listings are available on each date. Only show dates that have at least 10 listings available. Order by number of listings available.
+select c.date, count(*)
+from calendar c
+where c.available = 't'
+group by c.date
+having count(*) >= 10 
+order by count(*) desc 
+limit 20; 
