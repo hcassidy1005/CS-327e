@@ -1,0 +1,153 @@
+/* Query 1: w/out index: 60 ms; w/index: 51 ms */
+
+explain analyze select h.name, h.id, count(l.id)
+from host h full outer join listing l on h.id = l.host_id
+group by h.name, h.id
+order by h.name;
+                                                            QUERY PLAN                                                            
+----------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=7760.45..7779.18 rows=7492 width=18) (actual time=57.652..58.954 rows=7492 loops=1)
+   Sort Key: h.name
+   Sort Method: quicksort  Memory: 760kB
+   ->  HashAggregate  (cost=7203.38..7278.30 rows=7492 width=18) (actual time=38.107..41.202 rows=7492 loops=1)
+         Group Key: h.id
+         ->  Hash Full Join  (cost=2419.57..7155.07 rows=9663 width=14) (actual time=6.098..32.396 rows=9663 loops=1)
+               Hash Cond: (l.host_id = h.id)
+               ->  Seq Scan on listing l  (cost=0.00..4602.63 rows=9663 width=8) (actual time=0.057..19.528 rows=9663 loops=1)
+               ->  Hash  (cost=2325.92..2325.92 rows=7492 width=10) (actual time=5.996..5.996 rows=7492 loops=1)
+                     Buckets: 8192  Batches: 1  Memory Usage: 391kB
+                     ->  Seq Scan on host h  (cost=0.00..2325.92 rows=7492 width=10) (actual time=0.013..4.399 rows=7492 loops=1)
+ Planning time: 0.562 ms
+ Execution time: 59.517 ms
+(13 rows)
+ 
+create index hostid_hostname_idx on host(id, name);
+
+explain analyze select h.name, h.id, count(l.id)
+from host h full outer join listing l on h.id = l.host_id
+group by h.name, h.id
+order by h.name;
+
+                                                                            QUERY PLAN                                                                            
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=5671.20..5689.93 rows=7492 width=18) (actual time=49.397..50.719 rows=7492 loops=1)
+   Sort Key: h.name
+   Sort Method: quicksort  Memory: 760kB
+   ->  HashAggregate  (cost=5114.12..5189.04 rows=7492 width=18) (actual time=31.798..34.737 rows=7492 loops=1)
+         Group Key: h.id
+         ->  Hash Full Join  (cost=330.31..5065.81 rows=9663 width=14) (actual time=2.331..26.738 rows=9663 loops=1)
+               Hash Cond: (l.host_id = h.id)
+               ->  Seq Scan on listing l  (cost=0.00..4602.63 rows=9663 width=8) (actual time=0.024..18.230 rows=9663 loops=1)
+               ->  Hash  (cost=236.66..236.66 rows=7492 width=10) (actual time=2.285..2.285 rows=7492 loops=1)
+                     Buckets: 8192  Batches: 1  Memory Usage: 391kB
+                     ->  Index Only Scan using hostid_hostname_idx on host h  (cost=0.28..236.66 rows=7492 width=10) (actual time=0.028..1.136 rows=7492 loops=1)
+                           Heap Fetches: 0
+ Planning time: 0.328 ms
+ Execution time: 51.237 ms
+(14 rows)
+
+/* Query 2: w/out index: 26 ms; w/index: 16 ms */
+
+explain analyze select n.zipcode, max(price) 
+from listing l join neighborhood n on l.neighborhood = n.neighborhood_name and l.zipcode = n.zipcode
+where l.price > 1000
+group by n.zipcode;
+
+                                                          QUERY PLAN                                                           
+-------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=4651.01..4657.29 rows=41 width=36) (actual time=25.621..26.123 rows=22 loops=1)
+   Group Key: n.zipcode
+   ->  Merge Join  (cost=4651.01..4655.10 rows=356 width=8) (actual time=25.565..25.975 rows=290 loops=1)
+         Merge Cond: ((l.zipcode = n.zipcode) AND ((l.neighborhood)::text = (n.neighborhood_name)::text))
+         ->  Sort  (cost=4641.87..4642.76 rows=356 width=20) (actual time=25.289..25.353 rows=349 loops=1)
+               Sort Key: l.zipcode, l.neighborhood
+               Sort Method: quicksort  Memory: 49kB
+               ->  Seq Scan on listing l  (cost=0.00..4626.79 rows=356 width=20) (actual time=0.045..24.774 rows=349 loops=1)
+                     Filter: (price > '1000'::numeric)
+                     Rows Removed by Filter: 9314
+         ->  Sort  (cost=9.14..9.52 rows=154 width=15) (actual time=0.263..0.338 rows=380 loops=1)
+               Sort Key: n.zipcode, n.neighborhood_name
+               Sort Method: quicksort  Memory: 34kB
+               ->  Seq Scan on neighborhood n  (cost=0.00..3.54 rows=154 width=15) (actual time=0.025..0.074 rows=154 loops=1)
+ Planning time: 0.876 ms
+ Execution time: 26.231 ms
+(16 rows)
+
+create index neighborhood_zip_idx on neighborhood(zipcode);
+
+explain analyze select n.zipcode, max(price) 
+from listing l join neighborhood n on l.neighborhood = n.neighborhood_name and l.zipcode = n.zipcode
+where l.price > 1000
+group by n.zipcode;
+
+                                                          QUERY PLAN                                                           
+-------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=4651.01..4657.29 rows=41 width=36) (actual time=15.808..16.132 rows=22 loops=1)
+   Group Key: n.zipcode
+   ->  Merge Join  (cost=4651.01..4655.10 rows=356 width=8) (actual time=15.780..16.060 rows=290 loops=1)
+         Merge Cond: ((l.zipcode = n.zipcode) AND ((l.neighborhood)::text = (n.neighborhood_name)::text))
+         ->  Sort  (cost=4641.87..4642.76 rows=356 width=20) (actual time=15.634..15.695 rows=349 loops=1)
+               Sort Key: l.zipcode, l.neighborhood
+               Sort Method: quicksort  Memory: 49kB
+               ->  Seq Scan on listing l  (cost=0.00..4626.79 rows=356 width=20) (actual time=0.039..15.391 rows=349 loops=1)
+                     Filter: (price > '1000'::numeric)
+                     Rows Removed by Filter: 9314
+         ->  Sort  (cost=9.14..9.52 rows=154 width=15) (actual time=0.136..0.174 rows=380 loops=1)
+               Sort Key: n.zipcode, n.neighborhood_name
+               Sort Method: quicksort  Memory: 34kB
+               ->  Seq Scan on neighborhood n  (cost=0.00..3.54 rows=154 width=15) (actual time=0.022..0.044 rows=154 loops=1)
+ Planning time: 0.483 ms
+ Execution time: 16.189 ms
+(16 rows)
+
+/* Query 3: w/out index: 34 ms; w/index: 2 ms */
+
+explain analyze select id, price, avg(review_scores_rating) 
+from listing
+where price > 1000
+group by price, id
+order by price asc;
+
+                                                         QUERY PLAN                                                         
+----------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=4664.08..4664.97 rows=356 width=40) (actual time=33.521..33.545 rows=349 loops=1)
+   Sort Key: price
+   Sort Method: quicksort  Memory: 41kB
+   ->  GroupAggregate  (cost=4641.87..4648.99 rows=356 width=40) (actual time=33.073..33.357 rows=349 loops=1)
+         Group Key: id
+         ->  Sort  (cost=4641.87..4642.76 rows=356 width=12) (actual time=33.039..33.116 rows=349 loops=1)
+               Sort Key: id
+               Sort Method: quicksort  Memory: 41kB
+               ->  Seq Scan on listing  (cost=0.00..4626.79 rows=356 width=12) (actual time=0.106..32.741 rows=349 loops=1)
+                     Filter: (price > '1000'::numeric)
+                     Rows Removed by Filter: 9314
+ Planning time: 0.545 ms
+ Execution time: 33.671 ms
+(13 rows)
+
+create index listing_price_idx on listing(price);
+
+explain analyze select id, price, avg(review_scores_rating) 
+from listing
+where price > 1000
+group by price, id
+order by price asc;
+
+                                                                QUERY PLAN                                                                 
+-------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=1124.91..1125.80 rows=356 width=40) (actual time=2.202..2.249 rows=349 loops=1)
+   Sort Key: price
+   Sort Method: quicksort  Memory: 41kB
+   ->  HashAggregate  (cost=1105.37..1109.82 rows=356 width=40) (actual time=1.644..1.812 rows=349 loops=1)
+         Group Key: id
+         ->  Bitmap Heap Scan on listing  (cost=11.04..1103.59 rows=356 width=12) (actual time=0.227..1.377 rows=349 loops=1)
+               Recheck Cond: (price > '1000'::numeric)
+               Heap Blocks: exact=317
+               ->  Bitmap Index Scan on listing_price_idx  (cost=0.00..10.96 rows=356 width=0) (actual time=0.168..0.168 rows=349 loops=1)
+                     Index Cond: (price > '1000'::numeric)
+ Planning time: 0.613 ms
+ Execution time: 2.430 ms
+(12 rows)
+
+
+
