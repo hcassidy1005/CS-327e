@@ -1,0 +1,14 @@
+Boston Summary_Listing had issues when adding it to BigQuery. 
+
+Errors:
+gs://utcs-spr2018-datasets/airbnb/boston/clean/summary_listing.csv: Error while reading data, error message: CSV table encountered too many errors, giving up. Rows: 5092; errors: 1. Please look into the error stream for more details. (error code: invalid)
+gs://utcs-spr2018-datasets/airbnb/boston/clean/summary_listing.csv: Error while reading data, error message: CSV table references column position 2, but line starting at position:750299 contains only 2 columns. (error code: invalid)
+
+We overridded errors and ran it again. it then gave these warnings.
+
+Warnings:
+gs://utcs-spr2018-datasets/airbnb/boston/clean/summary_listing.csv: Error while reading data, error message: CSV table references column position 2, but line starting at position:750299 contains only 2 columns. (error code: invalid)
+gs://utcs-spr2018-datasets/airbnb/boston/clean/summary_listing.csv: Error while reading data, error message: CSV table references column position 14, but line starting at position:750335 contains only 14 columns. (error code: invalid)
+gs://utcs-spr2018-datasets/airbnb/boston/clean/summary_listing.csv: Error while reading data, error message: CSV table references column position 2, but line starting at position:802550 contains only 2 columns. (error code: invalid)
+gs://utcs-spr2018-datasets/airbnb/boston/clean/summary_listing.csv: Error while reading data, error message: CSV table references column position 14, but line starting at position:802588 contains only 14 columns. (error code: invalid)
+gs://utcs-spr2018-datasets/airbnb/boston/clean/summary_listing.csv: Error while reading data, error message: CSV table references column position 2, but line starting at position:816478 contains only 2 columns. (error code: invalid)
