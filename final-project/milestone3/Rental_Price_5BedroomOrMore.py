@@ -1,4 +1,4 @@
-# 1 bedroom code 
+# 5 bedroom code 
 #
 
 from __future__ import absolute_import
@@ -72,7 +72,7 @@ def parse_line(line):
 	start_year = 2015
 	end_year = 2019
 	
-	start_month_index = 58; # 2015-01 is on column 58
+	start_month_index = 43; # 2015-01 is on column 58
 	end_month_index = start_month_index + 12;
 	
 	day = "01"	
@@ -115,7 +115,7 @@ def run(argv=None):
       '--project=brogrammers-193119', # change to your project_id
       '--staging_location=gs://cs327e18/staging', # change to your bucket
       '--temp_location=gs://cs327e18/tmp', # change to your bucket
-      '--job_name=rentals-5bedroomOrMore' # assign descriptive name to this job, all in lower case letters
+      '--job_name=rentals-5bedroom' # assign descriptive name to this job, all in lower case letters
 	])
 	
 	pipeline_options = PipelineOptions(pipeline_args)
@@ -123,7 +123,7 @@ def run(argv=None):
 	
 	with beam.Pipeline(options=pipeline_options) as p:
 	
-		table_name = "brogrammers-193119:zillow.Rental_Price_5BedroomOrMore" # format: project_id:dataset.table
+		table_name = "brogrammers-193119:zillow.Rental_Price_5Bedroom" # format: project_id:dataset.table
 		table_schema = init_bigquery_table()
     
 		lines = p | 'ReadFile' >> beam.io.ReadFromText('gs://cs327e18/zillow/Zip_MedianRentalPrice_5BedroomOrMore.csv')

@@ -1,4 +1,4 @@
-# 1 bedroom code 
+# 4 bedroom code 
 #
 
 from __future__ import absolute_import
@@ -72,7 +72,7 @@ def parse_line(line):
 	start_year = 2015
 	end_year = 2019
 	
-	start_month_index = 58; # 2015-01 is on column 58
+	start_month_index = 54; # 2015-01 is on column 58
 	end_month_index = start_month_index + 12;
 	
 	day = "01"	
