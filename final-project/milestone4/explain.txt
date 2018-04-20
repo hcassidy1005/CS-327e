@@ -1,0 +1,136 @@
+
+/* Query 4: w/out index: 100 ms; w/index: 63 ms */
+
+explain analyze select listing_id, count(*) as number_of_amenities
+from Amenity 
+group by listing_id 
+having count(*) >= 10;
+                                                     QUERY PLAN                                                      
+---------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=4050.15..4144.47 rows=9432 width=12) (actual time=93.734..98.824 rows=9042 loops=1)
+   Group Key: listing_id
+   Filter: (count(*) >= 10)
+   Rows Removed by Filter: 621
+   ->  Seq Scan on amenity  (cost=0.00..2759.23 rows=172123 width=4) (actual time=0.014..24.654 rows=172123 loops=1)
+ Planning time: 0.473 ms
+ Execution time: 99.762 ms
+(7 rows)
+
+create index amenity_listing_idx on amenity(listing_id);
+
+explain analyze select listing_id, count(*) as number_of_amenities
+from Amenity 
+group by listing_id 
+having count(*) >= 10;
+       												 QUERY PLAN                                                      
+---------------------------------------------------------------------------------------------------------------------
+ HashAggregate  (cost=4050.15..4144.47 rows=9432 width=12) (actual time=59.211..62.744 rows=9042 loops=1)
+   Group Key: listing_id
+   Filter: (count(*) >= 10)
+   Rows Removed by Filter: 621
+   ->  Seq Scan on amenity  (cost=0.00..2759.23 rows=172123 width=4) (actual time=0.018..16.033 rows=172123 loops=1)
+ Planning time: 0.313 ms
+ Execution time: 63.440 ms
+(7 rows)
+
+/* Query 5: w/out index: 127 ms; w/index: 81 ms */
+
+explain analyze select l.id as listing_id, count(l.id) as number_of_reviews 
+from review r left join listing l
+on r.listing_id = l.id 
+group by l.id 
+order by count(l.id) desc;
+
+                QUERY PLAN                                                                          
+---------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=11377.57..11401.72 rows=9663 width=12) (actual time=126.205..126.776 rows=6007 loops=1)
+   Sort Key: (count(l.id)) DESC
+   Sort Method: quicksort  Memory: 474kB
+   ->  HashAggregate  (cost=10641.33..10737.96 rows=9663 width=12) (actual time=123.637..124.816 rows=6007 loops=1)
+         Group Key: l.id
+         ->  Hash Left Join  (cost=486.02..9968.58 rows=134550 width=4) (actual time=3.224..94.827 rows=134550 loops=1)
+               Hash Cond: (r.listing_id = l.id)
+               ->  Seq Scan on review r  (cost=0.00..7632.50 rows=134550 width=4) (actual time=0.026..33.415 rows=134550 loops=1)
+               ->  Hash  (cost=365.23..365.23 rows=9663 width=4) (actual time=3.116..3.116 rows=9663 loops=1)
+                     Buckets: 16384  Batches: 1  Memory Usage: 468kB
+                     ->  Index Only Scan using listings_pkey on listing l  (cost=0.29..365.23 rows=9663 width=4) (actual time=0.016..1.579 rows=9663 loops=1)
+                           Heap Fetches: 0
+ Planning time: 0.524 ms
+ Execution time: 127.303 ms
+(14 rows)
+
+create index reviewid_listingid_idx on review(listing_id);
+
+explain analyze select l.id as listing_id, count(l.id) as number_of_reviews 
+from review r left join listing l
+on r.listing_id = l.id 
+group by l.id 
+order by count(l.id) desc;
+
+                                                                              QUERY PLAN                                                                              
+----------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=6970.01..6994.16 rows=9663 width=12) (actual time=80.383..80.953 rows=6007 loops=1)
+   Sort Key: (count(l.id)) DESC
+   Sort Method: quicksort  Memory: 474kB
+   ->  HashAggregate  (cost=6233.77..6330.40 rows=9663 width=12) (actual time=77.498..79.074 rows=6007 loops=1)
+         Group Key: l.id
+         ->  Merge Right Join  (cost=0.71..5561.02 rows=134550 width=4) (actual time=0.053..50.336 rows=134550 loops=1)
+               Merge Cond: (l.id = r.listing_id)
+               ->  Index Only Scan using listings_pkey on listing l  (cost=0.29..365.23 rows=9663 width=4) (actual time=0.013..1.445 rows=9387 loops=1)
+                     Heap Fetches: 0
+               ->  Index Only Scan using reviewid_listingid_idx on review r  (cost=0.42..3506.67 rows=134550 width=4) (actual time=0.034..23.675 rows=134550 loops=1)
+                     Heap Fetches: 0
+ Planning time: 0.616 ms
+ Execution time: 81.393 ms
+(13 rows)
+
+
+
+/* Query 6: w/out index: 934 ms; w/index: 820 ms */
+
+explain analyze select c.date, count(*)
+from calendar c
+where c.available = 't'
+group by c.date
+having count(*) >= 10 
+order by count(*) desc;
+
+                       QUERY PLAN                                                            
+----------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=66449.14..66450.06 rows=366 width=12) (actual time=933.629..933.669 rows=366 loops=1)
+   Sort Key: (count(*)) DESC
+   Sort Method: quicksort  Memory: 42kB
+   ->  HashAggregate  (cost=66429.90..66433.56 rows=366 width=12) (actual time=933.323..933.454 rows=366 loops=1)
+         Group Key: date
+         Filter: (count(*) >= 10)
+         ->  Seq Scan on calendar c  (cost=0.00..54334.95 rows=1612660 width=4) (actual time=0.023..545.276 rows=1617297 loops=1)
+               Filter: available
+               Rows Removed by Filter: 1909698
+ Planning time: 0.377 ms
+ Execution time: 933.778 ms
+(11 rows)
+
+create index calendar_date_available_idx on calendar(date, available);
+
+explain analyze select c.date, count(*)
+from calendar c
+where c.available = 't'
+group by c.date
+having count(*) >= 10 
+order by count(*) desc;
+
+         QUERY PLAN                                                            
+----------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=66449.14..66450.06 rows=366 width=12) (actual time=819.692..819.718 rows=366 loops=1)
+   Sort Key: (count(*)) DESC
+   Sort Method: quicksort  Memory: 42kB
+   ->  HashAggregate  (cost=66429.90..66433.56 rows=366 width=12) (actual time=819.478..819.578 rows=366 loops=1)
+         Group Key: date
+         Filter: (count(*) >= 10)
+         ->  Seq Scan on calendar c  (cost=0.00..54334.95 rows=1612660 width=4) (actual time=0.018..454.381 rows=1617297 loops=1)
+               Filter: available
+               Rows Removed by Filter: 1909698
+ Planning time: 0.510 ms
+ Execution time: 819.868 ms
+(11 rows)
+
